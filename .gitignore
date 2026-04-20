@@ -16,13 +16,16 @@ env/
 .ipynb_checkpoints/
 
 # Data & model artifacts
-data/raw/
-data/activations/
-data/sae_weights/
+data/
 *.pt
 *.safetensors
 *.bin
-!requirements.txt
+
+# Build
+uv.lock
+
+# Loom
+.loom/
 
 # IDE
 .vscode/

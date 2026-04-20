@@ -1,4 +1,4 @@
-"""TransformerLens-based activation capture for Qwen2.5-1.5B.
+"""TransformerLens-based activation capture for Qwen2.5 models.
 
 Handles model loading, activation caching across all layers, and
 structured storage of activation tensors paired with prompt metadata.
@@ -12,18 +12,20 @@ from typing import Literal
 import torch
 import transformer_lens as tl
 
-MODEL_NAME = "Qwen/Qwen2.5-1.5B"
+DEFAULT_MODEL = "Qwen/Qwen2.5-0.5B"
 
-# Qwen2.5-1.5B architecture constants
-N_LAYERS = 28
-D_MODEL = 1536
-N_HEADS = 12
-N_KV_HEADS = 2
+# Architecture constants per model variant
+MODEL_CONFIGS = {
+    "Qwen/Qwen2.5-0.5B": {"n_layers": 24, "d_model": 896, "n_heads": 14, "n_kv_heads": 2},
+    "Qwen/Qwen2.5-1.5B": {"n_layers": 28, "d_model": 1536, "n_heads": 12, "n_kv_heads": 2},
+}
 
 
-def load_model(device: str = "cpu") -> tl.HookedTransformer:
-    """Load Qwen2.5-1.5B into TransformerLens."""
-    model = tl.HookedTransformer.from_pretrained(MODEL_NAME, device=device)
+def load_model(
+    model_name: str = DEFAULT_MODEL, device: str = "cpu"
+) -> tl.HookedTransformer:
+    """Load a Qwen2.5 model into TransformerLens."""
+    model = tl.HookedTransformer.from_pretrained(model_name, device=device)
     return model
 
 
@@ -61,7 +63,7 @@ def cache_activations(
     if hook_points is None:
         hook_points = ["resid_pre", "resid_mid", "resid_post"]
     if layers is None:
-        layers = list(range(N_LAYERS))
+        layers = list(range(model.cfg.n_layers))
 
     # Build the list of hook names TransformerLens expects
     names_filter = []

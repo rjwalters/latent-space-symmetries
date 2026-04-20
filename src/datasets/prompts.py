@@ -20,6 +20,35 @@ ENTITY_SETS = {
     4: ["Alice", "Bob", "Carol", "Diana"],
 }
 
+# Multiple entity sets for gathering many samples per permutation.
+# Each set should have names with similar tokenization length and frequency.
+ENTITY_SETS_MULTI = {
+    2: [
+        ["Alice", "Bob"],
+        ["Carol", "Diana"],
+        ["Emma", "Frank"],
+        ["Grace", "Henry"],
+        ["Julia", "Kevin"],
+        ["Laura", "Oscar"],
+        ["Sarah", "Peter"],
+        ["Helen", "James"],
+        ["Maria", "David"],
+        ["Susan", "Brian"],
+    ],
+    3: [
+        ["Alice", "Bob", "Carol"],
+        ["Diana", "Emma", "Frank"],
+        ["Grace", "Henry", "Julia"],
+        ["Kevin", "Laura", "Oscar"],
+        ["Sarah", "Peter", "Helen"],
+        ["James", "Maria", "David"],
+        ["Susan", "Brian", "Nancy"],
+        ["Roger", "Linda", "Scott"],
+        ["Karen", "Steve", "Donna"],
+        ["Janet", "Bruce", "Wendy"],
+    ],
+}
+
 # Abstract symbol sets (for controlling lexical asymmetry)
 SYMBOL_SETS = {
     2: ["X", "Y"],
@@ -113,11 +142,18 @@ ROLE_ASSIGNMENT_S3 = PromptFamily(
     n_entities=3,
 )
 
-POINTER_S3 = PromptFamily(
-    name="pointer_s3",
-    template="Among {e0}, {e1}, and {e2}, the second person listed is",
+FIRST_ENTER_S2 = PromptFamily(
+    name="first_enter_s2",
+    template="{e0} and {e1} entered the room. The first to enter was",
+    n_entities=2,
+    expected_answer_fn=lambda entities: entities[0],
+)
+
+FIRST_NAME_S3 = PromptFamily(
+    name="first_name_s3",
+    template="Names: {e0}, {e1}, {e2}. The first name in the list is",
     n_entities=3,
-    expected_answer_fn=lambda entities: entities[1],
+    expected_answer_fn=lambda entities: entities[0],
 )
 
 OBJECT_SET_S3 = PromptFamily(
@@ -127,4 +163,71 @@ OBJECT_SET_S3 = PromptFamily(
     entity_set=["red cube", "blue sphere", "green key"],
 )
 
-ALL_FAMILIES = [SET_LIST_S2, SET_LIST_S3, ROLE_ASSIGNMENT_S3, POINTER_S3, OBJECT_SET_S3]
+ALL_FAMILIES = [
+    SET_LIST_S2, FIRST_ENTER_S2,
+    SET_LIST_S3, ROLE_ASSIGNMENT_S3, FIRST_NAME_S3,
+    OBJECT_SET_S3,
+]
+
+# --- Templates for bulk sample generation (Phase 4+) ---
+# Multiple templates × multiple entity sets = many samples per permutation.
+
+TEMPLATES_S2 = [
+    "{e0} and {e1} are standing in a room.",
+    "{e0} and {e1} entered the room. The first to enter was",
+    "{e0} and {e1} went to the park.",
+    "{e0} and {e1} are best friends.",
+    "{e0} called {e1} on the phone.",
+    "{e0} and {e1} sat down for dinner.",
+    "{e0} asked {e1} a question.",
+    "{e0} and {e1} ran a race.",
+    "{e0} greeted {e1} at the door.",
+    "{e0} and {e1} studied for the exam.",
+]
+
+TEMPLATES_S3 = [
+    "{e0}, {e1}, and {e2} are standing in a room.",
+    "{e0} gave {e1} the book. {e2} watched.",
+    "Names: {e0}, {e1}, {e2}. The first name in the list is",
+    "{e0}, {e1}, and {e2} went to the park.",
+    "{e0}, {e1}, and {e2} are best friends.",
+    "{e0} called {e1} while {e2} listened.",
+    "{e0}, {e1}, and {e2} sat down for dinner.",
+    "{e0} asked {e1} about {e2}.",
+    "{e0}, {e1}, and {e2} ran a race.",
+    "{e0} greeted {e1} and {e2} at the door.",
+]
+
+
+def generate_bulk_samples(
+    n_entities: int,
+) -> list[dict]:
+    """Generate many (base_prompt, permuted_prompt, permutation) triples.
+
+    Crosses all templates × all entity sets × all permutations to produce
+    enough samples for well-conditioned operator fitting.
+    """
+    templates = TEMPLATES_S2 if n_entities == 2 else TEMPLATES_S3
+    entity_sets = ENTITY_SETS_MULTI[n_entities]
+    group = PermutationGroup(n_entities)
+
+    samples = []
+    for template in templates:
+        for entity_set in entity_sets:
+            base_replacements = {f"e{i}": name for i, name in enumerate(entity_set)}
+            base_prompt = template.format(**base_replacements)
+            for perm in group.elements:
+                if perm.is_identity:
+                    continue
+                perm_entities = perm.apply_to_list(entity_set)
+                perm_replacements = {f"e{i}": name for i, name in enumerate(perm_entities)}
+                perm_prompt = template.format(**perm_replacements)
+                samples.append({
+                    "base_prompt": base_prompt,
+                    "permuted_prompt": perm_prompt,
+                    "permutation": perm,
+                    "parity": perm.parity,
+                    "entity_set": entity_set,
+                    "template": template,
+                })
+    return samples

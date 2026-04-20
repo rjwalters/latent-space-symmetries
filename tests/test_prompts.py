@@ -2,7 +2,7 @@
 
 from src.datasets.prompts import (
     SET_LIST_S3,
-    POINTER_S3,
+    FIRST_NAME_S3,
     generate_permuted_prompts,
 )
 from src.datasets.permutations import Permutation
@@ -31,9 +31,9 @@ class TestPromptGeneration:
         assert "Bob" in prompt.split(",")[0]  # Bob should come first
         assert "Alice" in prompt  # Alice should still be present
 
-    def test_pointer_expected_answer(self):
-        assert POINTER_S3.expected_answer_fn(["Alice", "Bob", "Carol"]) == "Bob"
-        assert POINTER_S3.expected_answer_fn(["Carol", "Alice", "Bob"]) == "Alice"
+    def test_first_name_expected_answer(self):
+        assert FIRST_NAME_S3.expected_answer_fn(["Alice", "Bob", "Carol"]) == "Alice"
+        assert FIRST_NAME_S3.expected_answer_fn(["Carol", "Alice", "Bob"]) == "Carol"
 
     def test_all_prompts_unique(self):
         results = generate_permuted_prompts(SET_LIST_S3)

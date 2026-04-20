@@ -17,12 +17,12 @@ The codebase is organized into focused modules:
 - `src/operators/` — Fitting and testing permutation operators W_π with group-relation metrics
 - `src/sae/` — SAE training and feature-space analysis
 - `src/interventions/` — Causal validation via activation patching
-- `notebooks/` — Exploratory analysis, one per milestone
+- `scripts/` — Experiment scripts, one per phase/milestone
 - `tests/` — Unit tests, especially for group-theory utilities and dataset correctness
 
 ## Key Technical Details
 
-**Model**: Qwen2.5-1.5B Base — 28 layers, hidden size 1536, 12 query heads / 2 KV heads, RoPE, SwiGLU, RMSNorm, tied embeddings.
+**Model**: Start with Qwen2.5-0.5B Base (24 layers, hidden size 896, 14 query heads / 2 KV heads), scale to 1.5B once patterns confirmed. Both use RoPE, SwiGLU, RMSNorm, tied embeddings.
 
 **Stack**: TransformerLens (activation capture/patching), SAELens (sparse feature decomposition), PyTorch, NumPy/SciPy for linear algebra.
 
@@ -58,7 +58,8 @@ The codebase is organized into focused modules:
 - Validate behaviorally before examining internals
 - Correlation is not causation — always follow operator fitting with causal interventions
 - Save large artifacts (activations, model weights, SAE checkpoints) under `data/` (gitignored)
-- Notebooks are exploratory; reusable logic goes into `src/`
+- Use `uv` for environment management with `pyproject.toml`
+- Experiment scripts go in `scripts/`; reusable logic goes into `src/`
 
 ## References
 
