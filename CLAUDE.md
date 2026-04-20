@@ -66,3 +66,7 @@ The codebase is organized into focused modules:
 - [Group Crosscoders (arXiv 2410.24184)](https://arxiv.org/abs/2410.24184) — symmetry-oriented mechanistic interpretability
 - [TransformerLens](https://transformerlensorg.github.io/TransformerLens/)
 - [SAELens](https://github.com/jbloomAus/SAELens)
+
+<!-- BEGIN LOOM ORCHESTRATION -->
+This repository uses [Loom](https://github.com/rjwalters/loom) for AI-powered development orchestration. See `.loom/CLAUDE.md` for the full guide (roles, labels, worktrees, configuration).
+<!-- END LOOM ORCHESTRATION -->
